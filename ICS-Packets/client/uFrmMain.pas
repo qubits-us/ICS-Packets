@@ -115,9 +115,9 @@ aMemStrm:=tMemoryStream.Create;
 aJpg.SaveToStream(aMemStrm);
 
 FillPacketIdent(aHdr.Ident);
-aHdr.Command:=1;//recv jpeg
+aHdr.Command:=CMD_JPG;//recv jpeg
 aHdr.DataSize:=aMemStrm.Size;//size of jpeg
-aMemStrm.Position:=CMD_JPG;
+aMemStrm.Position:=0;
 SetLength(aBuff,SizeOf(aHdr)+aHdr.DataSize);
 move(aHdr,aBuff[0],SizeOf(aHdr));
 offset:=SizeOf(aHdr);

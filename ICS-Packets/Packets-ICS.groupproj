@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{62704F6A-9F90-4C0C-BC7B-ACB2CF382243}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="server\PacketSrv.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="client\PacketClient.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="PacketSrv">
+        <MSBuild Projects="server\PacketSrv.dproj"/>
+    </Target>
+    <Target Name="PacketSrv:Clean">
+        <MSBuild Projects="server\PacketSrv.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PacketSrv:Make">
+        <MSBuild Projects="server\PacketSrv.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="PacketClient">
+        <MSBuild Projects="client\PacketClient.dproj"/>
+    </Target>
+    <Target Name="PacketClient:Clean">
+        <MSBuild Projects="client\PacketClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="PacketClient:Make">
+        <MSBuild Projects="client\PacketClient.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="PacketSrv;PacketClient"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="PacketSrv:Clean;PacketClient:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="PacketSrv:Make;PacketClient:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

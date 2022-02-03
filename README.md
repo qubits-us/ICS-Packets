@@ -1,7 +1,7 @@
 # ICS-Packets
 Quick demo of a custom packet client-server
 
-Sends Jpegs from cleint to server and vice..
+Sends Jpegs from client to server and vice..
 
 Compiled with Delphi 10.1 Berlin with ICS version idk.. :)
 

@@ -363,7 +363,7 @@ begin
       end;
 
   finally
-
+   LockQ.Leave;
   end;
 end;
 

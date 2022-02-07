@@ -16,6 +16,7 @@ uses
 type
   TRecvJpeg_Event  = procedure (Sender:TObject; aJpeg:tJpegImage) of object;
   TRecvStr_Event  = procedure (Sender:TObject; aStr:String) of object;
+  TRecvPeep_Event  = procedure (Sender:TObject; aPeep:TPeep) of object;
 
 
 type
@@ -27,14 +28,17 @@ type
     procedure ProcessIncoming;
     procedure piRecvJpeg;
     procedure piRecvStr;
+    procedure piRecvPeep;
   private
     { Private declarations }
     fRecvJpeg:TRecvJpeg_Event;
     fRecvStr:TRecvStr_Event;
+    fRecvPeep:tRecvPeep_Event;
   public
     { Public declarations }
   property OnRecvJpeg:TRecvJpeg_Event read fRecvJpeg write fRecvJpeg;
   property OnRecvStr:TRecvStr_Event read fRecvStr write fRecvStr;
+  property OnRecvPeep:TRecvPeep_Event read fRecvPeep write fRecvPeep;
   end;
 
 var
@@ -126,6 +130,7 @@ begin
             CMD_NOP:;//nothing
             CMD_JPG:piRecvJpeg;
             CMD_STR:piRecvStr;
+            CMD_PEEP:piRecvPeep;
             end;
           end;
         end;
@@ -182,6 +187,15 @@ begin
     end;
 end;
 
+procedure TPacketClntDm.piRecvPeep;
+var
+aPeep:tPeep;
+begin
+  //get peep, just after header..
+  Move(ClientBuff[SizeOf(tPacketHdr)],aPeep,SizeOf(tPeep));
+    if Assigned(fRecvPeep) then
+        fRecvPeep(nil,aPeep);
+end;
 
 
 procedure TPacketClntDm.cliSockSessionClosed(Sender: TObject; ErrCode: Word);

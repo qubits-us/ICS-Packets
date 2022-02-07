@@ -59,6 +59,7 @@ type
     procedure ProcessData(Client : TPacketClient);
     procedure piRecvImage(Client: TPacketClient);
     procedure piRecvString(Client: TPacketClient);
+    procedure piRecvPeep(Client: TPacketClient);
     procedure srvSockDataSent(Sender: TObject; ErrCode: Word);
     procedure srvSockClientDisconnect(Sender: TObject; Client: TWSocketClient; Error: Word);
     procedure srvSockSessionConnected(Sender: TObject; ErrCode: Word);
@@ -256,6 +257,7 @@ begin
                 CMD_NOP:;//nothing do.. send just packet header command 0 to keep alive..
                 CMD_JPG:piRecvImage(Client);//extra data should be jpeg
                 CMD_STR:piRecvString(Client);//extra data should be a string
+                CMD_PEEP:piRecvPeep(Client);//rec a peep record
                 else
                      LogMsg('Unknowm Command.. ignoring packet');
                 end;
@@ -299,8 +301,6 @@ begin
     finally
      aMemStream.SetSize(0);
      aMemStream.Free;
-     SetLength(aData.Data,0);
-     aData.Free;
     end;
 end;
 
@@ -336,15 +336,39 @@ begin
     finally
      aMemStream.SetSize(0);
      aMemStream.Free;
-//     SetLength(aData.Data,0);
-  //   aData.Free;
     end;
 end;
+
+
+procedure TServerCommsDm.piRecvPeep(Client: TPacketClient);
+var
+aPeep:tPeep;
+aData:tPacketData;
+begin
+  //get header..
+  Move(Client.Buff[SizeOf(tPacketHdr)],aPeep,SizeOf(TPeep));
+    aData:=tPacketData.Create;
+    SetLength(aData.Data,SizeOf(TPeep));
+    Move(aPeep,aData.Data[0],SizeOf(tPeep));
+    aData.DataType:=CMD_PEEP;
+     //put the jpeg in the q
+      LockQ.Enter;
+        try
+         if fPacketQue.Count<MAX_QUES then
+          fPacketQue.Enqueue(aData);
+        finally
+         LockQ.Leave;
+        end;
+      //trigger
+      PacketRecv;
+end;
+
+
+
 
 procedure tServerCommsDm.PacketRecv;
 begin
 if assigned(fRecvEvent) then fRecvEvent(nil);
-
 end;
 
 

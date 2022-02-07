@@ -19,9 +19,11 @@ Ident_Packet :array[0..15] of byte =(0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7);
 //max items in the q before we start dropping
 MAX_QUES=101;
 
+//Command bytes
 CMD_NOP=0;
 CMD_JPG=1;
 CMD_STR=2;
+CMD_PEEP=3;
 
 
 //type used in helper function
@@ -39,7 +41,22 @@ end;
 
 
 
-function CheckPacketIdent(Const AIdent:TIdentArray):boolean;
+type
+  tPeep = packed record
+    FirstName:array[0..39] of byte;
+    LastName:array[0..39] of byte;
+    Msg:array[0..499] of byte;
+  end;
+
+type
+  tPeepPacket = packed record
+     hdr:tPacketHdr;
+     peep:tPeep;
+  end;
+
+
+
+function  CheckPacketIdent(Const AIdent:TIdentArray):boolean;
 procedure FillPacketIdent(var aIdent:tIdentArray);
 
 

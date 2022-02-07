@@ -2,7 +2,7 @@ object MainFrm: TMainFrm
   Left = 0
   Top = 0
   Caption = 'ICS Packet Client Demo'
-  ClientHeight = 299
+  ClientHeight = 415
   ClientWidth = 790
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -1983,28 +1983,49 @@ object MainFrm: TMainFrm
   end
   object Label1: TLabel
     Left = 16
-    Top = 208
+    Top = 333
     Width = 39
     Height = 13
     Caption = 'Address'
   end
   object Label2: TLabel
     Left = 144
-    Top = 208
+    Top = 333
     Width = 20
     Height = 13
     Caption = 'Port'
   end
   object Label3: TLabel
     Left = 232
-    Top = 208
+    Top = 333
     Width = 47
     Height = 13
     Caption = 'Command'
   end
+  object lblFirstName: TLabel
+    Left = 472
+    Top = 280
+    Width = 51
+    Height = 13
+    Caption = 'First Name'
+  end
+  object lblLastName: TLabel
+    Left = 472
+    Top = 320
+    Width = 50
+    Height = 13
+    Caption = 'Last Name'
+  end
+  object lblMsg: TLabel
+    Left = 472
+    Top = 357
+    Width = 42
+    Height = 13
+    Caption = 'Message'
+  end
   object btnConnect: TButton
     Left = 16
-    Top = 256
+    Top = 381
     Width = 75
     Height = 25
     Caption = 'Connect'
@@ -2013,7 +2034,7 @@ object MainFrm: TMainFrm
   end
   object edSrvIp: TEdit
     Left = 16
-    Top = 224
+    Top = 349
     Width = 121
     Height = 21
     TabOrder = 1
@@ -2023,14 +2044,14 @@ object MainFrm: TMainFrm
     Left = 16
     Top = 24
     Width = 441
-    Height = 177
+    Height = 293
     Lines.Strings = (
       'DisplayMemo')
     TabOrder = 2
   end
   object btnSend: TButton
     Left = 176
-    Top = 256
+    Top = 381
     Width = 75
     Height = 25
     Caption = 'Send'
@@ -2039,7 +2060,7 @@ object MainFrm: TMainFrm
   end
   object edPort: TEdit
     Left = 144
-    Top = 224
+    Top = 349
     Width = 73
     Height = 21
     TabOrder = 4
@@ -2047,7 +2068,7 @@ object MainFrm: TMainFrm
   end
   object btnDisconnect: TButton
     Left = 95
-    Top = 256
+    Top = 381
     Width = 75
     Height = 25
     Caption = 'Disconnect'
@@ -2056,10 +2077,37 @@ object MainFrm: TMainFrm
   end
   object edCommand: TEdit
     Left = 232
-    Top = 224
+    Top = 349
     Width = 65
     Height = 21
     TabOrder = 6
     Text = '0'
+  end
+  object edFirstName: TEdit
+    Left = 472
+    Top = 296
+    Width = 121
+    Height = 21
+    MaxLength = 40
+    TabOrder = 7
+    Text = 'John'
+  end
+  object edLastName: TEdit
+    Left = 472
+    Top = 334
+    Width = 121
+    Height = 21
+    MaxLength = 40
+    TabOrder = 8
+    Text = 'Doe'
+  end
+  object edMsg: TEdit
+    Left = 472
+    Top = 376
+    Width = 297
+    Height = 21
+    MaxLength = 500
+    TabOrder = 9
+    Text = 'Hello World!!'
   end
 end

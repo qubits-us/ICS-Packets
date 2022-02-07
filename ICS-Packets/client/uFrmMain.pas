@@ -26,6 +26,12 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    edFirstName: TEdit;
+    edLastName: TEdit;
+    edMsg: TEdit;
+    lblFirstName: TLabel;
+    lblLastName: TLabel;
+    lblMsg: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure DiscoverMACIP;
     procedure btnConnectClick(Sender: TObject);
@@ -33,8 +39,10 @@ type
     procedure SendPacketHdr;
     procedure SendString;
     procedure SendJpeg;
+    procedure SendPeep;
     procedure ShowJpeg(sender:tObject; aJpeg:tJpegImage);
     procedure ShowString(sender:tObject; aStr:String);
+    procedure ShowPeep(sender:tObject; aPeep:tPeep);
     procedure btnDisconnectClick(Sender: TObject);
   private
     { Private declarations }
@@ -86,6 +94,7 @@ begin
    CMD_NOP:SendPacketHdr;
    CMD_JPG:SendJpeg;
    CMD_STR:SendString;
+   CMD_PEEP:SendPeep;
    end;
 
 
@@ -162,6 +171,43 @@ aMemStrm.SetSize(0);
 aMemStrm.Free;
 SetLength(aBuff,0);
 
+end;
+
+
+procedure tMainFrm.SendPeep;
+var
+aPeepPck:TPeepPacket;
+aBytes:tBytes;
+begin
+
+FillPacketIdent(aPeepPck.hdr.Ident);
+aPeepPck.hdr.Command:=CMD_PEEP;
+aPeepPck.hdr.DataSize:=SizeOf(tPeep);
+//init peep string arrays.. fill with spaces.. trim off later..
+FillChar(aPeepPck.peep.FirstName,SizeOf(aPeepPck.peep.FirstName),#32);
+FillChar(aPeepPck.peep.LastName,SizeOf(aPeepPck.peep.LastName),#32);
+FillChar(aPeepPck.peep.Msg,SizeOf(aPeepPck.peep.Msg),#32);
+// i set MaxLength on the edits to ensure data is not too big
+if Length(edFirstName.Text)>0 then
+  begin
+    aBytes:=TEncoding.ANSI.GetBytes(edFirstName.Text);
+    Move(aBytes[0],aPeepPck.peep.FirstName[0],Length(aBytes));
+  end;
+SetLength(aBytes,0);
+if Length(edLastName.Text)>0 then
+  begin
+    aBytes:=TEncoding.ANSI.GetBytes(edLastName.Text);
+    Move(aBytes[0],aPeepPck.peep.LastName[0],Length(aBytes));
+  end;
+SetLength(aBytes,0);
+if Length(edMsg.Text)>0 then
+  begin
+    aBytes:=TEncoding.ANSI.GetBytes(edMsg.Text);
+    Move(aBytes[0],aPeepPck.peep.Msg[0],Length(aBytes));
+  end;
+SetLength(aBytes,0);
+
+PacketClntDm.cliSock.Send(@aPeepPck,SizeOf(tPeepPacket));
 
 end;
 
@@ -176,6 +222,21 @@ begin
   DisplayMemo.Lines.Add(aStr);
 end;
 
+procedure tMainFrm.ShowPeep(sender: TObject; aPeep: tPeep);
+var
+aBytes:tBytes;
+begin
+  //
+  SetLength(aBytes,SizeOf(aPeep.FirstName));
+  Move(aPeep.FirstName[0],aBytes[0],SizeOf(aPeep.FirstName));
+  edFirstName.Text:=TEncoding.ANSI.GetString(aBytes);
+  Move(aPeep.LastName[0],aBytes[0],SizeOf(aPeep.LastName));
+  edLastName.Text:=TEncoding.ANSI.GetString(aBytes);
+  SetLength(aBytes,SizeOf(aPeep.Msg));
+  Move(aPeep.Msg[0],aBytes[0],SizeOf(aPeep.Msg));
+  edMsg.Text:=TEncoding.ANSI.GetString(aBytes);
+  SetLength(aBytes,0);
+end;
 
 
 procedure tMainFrm.DiscoverMACIP;
@@ -252,6 +313,7 @@ ReportMemoryLeaksOnShutdown:=True;
 PacketClntDm:=TPacketClntDm.Create(application);
 PacketClntDm.OnRecvJpeg:=ShowJpeg;
 PacketClntDm.OnRecvStr:=ShowString;
+PacketClntDm.OnRecvPeep:=ShowPeep;
 RecvCount:=0;
 
 
@@ -261,9 +323,6 @@ DisplayMemo.Lines.Add('Host: '+ClientName);
 DisplayMemo.Lines.Add('IP: '+ClientIP);
 DisplayMemo.Lines.Add('MAC: '+ClientMac);
 edSrvIp.Text:=ClientIP;
-
-
-
 
 
 end;

@@ -31,8 +31,10 @@ type
     procedure btnConnectClick(Sender: TObject);
     procedure btnSendClick(Sender: TObject);
     procedure SendPacketHdr;
+    procedure SendString;
     procedure SendJpeg;
     procedure ShowJpeg(sender:tObject; aJpeg:tJpegImage);
+    procedure ShowString(sender:tObject; aStr:String);
     procedure btnDisconnectClick(Sender: TObject);
   private
     { Private declarations }
@@ -83,6 +85,7 @@ begin
    case aCommand of
    CMD_NOP:SendPacketHdr;
    CMD_JPG:SendJpeg;
+   CMD_STR:SendString;
    end;
 
 
@@ -98,6 +101,35 @@ begin
      aPacket.Command:=CMD_NOP;//do nothing..
      aPacket.DataSize:=0;//no data
      PacketClntDm.cliSock.Send(@aPacket,SizeOf(aPacket));
+end;
+
+procedure TMainFrm.SendString;
+var
+aHdr:tPacketHdr;
+aStr:String;
+aBytes:TBytes;
+aBuff:TBytes;
+begin
+
+  aStr:='Hello from client!!';
+
+  if Length(aStr)>0 then
+   begin
+   FillPacketIdent(aHdr.Ident);
+   aHdr.Command:=CMD_STR;
+   aBytes:=TEncoding.ANSI.GetBytes(aStr);//for example using ansi
+   SetLength(aBuff,SizeOf(tPacketHdr)+Length(aBytes));//make room for hdr + string
+   aHdr.DataSize:=Length(aBytes);
+   Move(aHdr,aBuff[0],SizeOf(tPacketHdr));
+   Move(aBytes[0],aBuff[SizeOf(tPacketHdr)],Length(aBytes));
+   PacketClntDm.cliSock.Send(aBuff,Length(aBuff));
+   SetLength(aBytes,0);
+   SetLength(aBuff,0);
+   end;
+
+
+
+
 end;
 
 procedure TMainFrm.SendJpeg;
@@ -137,6 +169,11 @@ procedure tMainFrm.ShowJpeg(sender:tObject; aJpeg:tJpegImage);
 begin
 //
   im.Picture.Assign(aJpeg);
+end;
+
+procedure tMainFrm.ShowString(sender: TObject; aStr: string);
+begin
+  DisplayMemo.Lines.Add(aStr);
 end;
 
 
@@ -214,6 +251,7 @@ begin
 ReportMemoryLeaksOnShutdown:=True;
 PacketClntDm:=TPacketClntDm.Create(application);
 PacketClntDm.OnRecvJpeg:=ShowJpeg;
+PacketClntDm.OnRecvStr:=ShowString;
 RecvCount:=0;
 
 

@@ -15,6 +15,7 @@ uses
 
 type
   TRecvJpeg_Event  = procedure (Sender:TObject; aJpeg:tJpegImage) of object;
+  TRecvStr_Event  = procedure (Sender:TObject; aStr:String) of object;
 
 
 type
@@ -25,12 +26,15 @@ type
     procedure cliSockSessionClosed(Sender: TObject; ErrCode: Word);
     procedure ProcessIncoming;
     procedure piRecvJpeg;
+    procedure piRecvStr;
   private
     { Private declarations }
     fRecvJpeg:TRecvJpeg_Event;
+    fRecvStr:TRecvStr_Event;
   public
     { Public declarations }
   property OnRecvJpeg:TRecvJpeg_Event read fRecvJpeg write fRecvJpeg;
+  property OnRecvStr:TRecvStr_Event read fRecvStr write fRecvStr;
   end;
 
 var
@@ -121,6 +125,7 @@ begin
             case aPacket.Command of
             CMD_NOP:;//nothing
             CMD_JPG:piRecvJpeg;
+            CMD_STR:piRecvStr;
             end;
           end;
         end;
@@ -154,6 +159,28 @@ begin
     end;
 end;
 
+procedure TPacketClntDm.piRecvStr;
+var
+aPacketHdr:tPacketHdr;
+offset:integer;
+aStr:String;
+aBytes:tBytes;
+begin
+  //get header..
+  Move(ClientBuff,aPacketHdr,SizeOf(aPacketHdr));
+
+    SetLength(aBytes,aPacketHdr.DataSize);
+    try
+    //just want the extra data, set offset to reflect this
+    Offset:=SizeOf(tPacketHdr);
+    Move(ClientBuff[offset],aBytes[0],Length(aBytes));
+    aStr:=tEncoding.ANSI.GetString(aBytes);
+    if Assigned(fRecvStr) then
+        fRecvStr(nil,aStr);
+    finally
+    SetLength(aBytes,0);
+    end;
+end;
 
 
 

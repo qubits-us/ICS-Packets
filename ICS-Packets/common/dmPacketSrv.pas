@@ -32,6 +32,12 @@ type
   end;
 
 type
+  TPacketData = class
+    DataType:byte;
+    Data:tBytes;
+  end;
+
+type
   TRecvPacket_Event  = procedure (Sender:TObject) of object;
   TDisplayLog_Event  = procedure (Sender:TObject) of object;
 
@@ -45,13 +51,14 @@ type
     procedure DataModuleDestroy(Sender: TObject);
     function  CheckPacketIdent(Const AIdent:TIdentArray):boolean;
     procedure LogMsg(const Msg: string);
-    procedure ImRecv;
+    procedure PacketRecv;
     procedure srvSockClientCreate(Sender: TObject; Client: TWSocketClient);
     procedure srvSockClientConnect(Sender: TObject; Client: TWSocketClient; Error: Word);
     procedure srvSockBgException(Sender: TObject; E: Exception; var CanClose: Boolean);
     procedure srvSockDataAvailable(Sender: TObject; ErrCode: Word);
     procedure ProcessData(Client : TPacketClient);
     procedure piRecvImage(Client: TPacketClient);
+    procedure piRecvString(Client: TPacketClient);
     procedure srvSockDataSent(Sender: TObject; ErrCode: Word);
     procedure srvSockClientDisconnect(Sender: TObject; Client: TWSocketClient; Error: Word);
     procedure srvSockSessionConnected(Sender: TObject; ErrCode: Word);
@@ -60,16 +67,16 @@ private
     { Private declarations }
     fRecvEvent:TRecvPacket_Event;
     fLogEvent:TDisplayLog_Event;
-    fImageQue:TQueue<tJpegImage>;
-    function  GetImageCount:integer;
+    fPacketQue:TQueue<tPacketData>;
+    function  GetPacketCount:integer;
     procedure EmptyQ;
 
   public
     { Public declarations }
     fLogList:TStringList;
-    function  PopImage:tJpegImage;
-    property  ImageCount:integer read GetImageCount;
-    property  OnRecvJpeg:TRecvPacket_Event read fRecvEvent write fRecvEvent;
+    function  PopPacket:tPacketData;
+    property  PacketCount:integer read GetPacketCount;
+    property  OnRecvPacket:TRecvPacket_Event read fRecvEvent write fRecvEvent;
     property  OnDisplayLog:TDisplayLog_Event read fLogEvent write fLogEvent;
   end;
 
@@ -91,7 +98,7 @@ begin
 LockDisplay:=TCriticalSection.Create;
 LockQ:=TCriticalSection.Create;
 fLogList:=tStringList.Create;
-fImageQue:=TQueue<tJpegImage>.Create;
+fPacketQue:=TQueue<tPacketData>.Create;
 
 end;
 
@@ -99,7 +106,7 @@ procedure TServerCommsDm.DataModuleDestroy(Sender: TObject);
 begin
 //set them all free..
 EmptyQ;
-fImageQue.Free;
+fPacketQue.Free;
 fLogList.Free;
 LockDisplay.Free;
 LockQ.Free;
@@ -246,8 +253,9 @@ begin
 
                 //process command
                 case aPacketHdr.Command of
-                0:;//nothing do.. send just packet header command 0 to keep alive..
-                1:piRecvImage(Client);//
+                CMD_NOP:;//nothing do.. send just packet header command 0 to keep alive..
+                CMD_JPG:piRecvImage(Client);//extra data should be jpeg
+                CMD_STR:piRecvString(Client);//extra data should be a string
                 else
                      LogMsg('Unknowm Command.. ignoring packet');
                 end;
@@ -264,7 +272,7 @@ var
 aPacketHdr:tPacketHdr;
 offset:integer;
 aMemStream:tMemoryStream;
-aJpg:tJpegImage;
+aData:tPacketData;
 begin
   //get header..
   Move(Client.Buff,aPacketHdr,SizeOf(aPacketHdr));
@@ -273,31 +281,67 @@ begin
     try
     //just want the extra data, set offset to reflect this
     Offset:=SizeOf(tPacketHdr);
-    aMemStream.SetSize(aPacketHdr.DataSize);
-    aMemStream.Write(Client.Buff[offset],aPacketHdr.DataSize);
-    aMemStream.Position:=0;
-    aJpg:=tJpegImage.Create;
-    aJpg.LoadFromStream(aMemStream);
+    aData:=tPacketData.Create;
+    SetLength(aData.Data,aPacketHdr.DataSize);
+    Move(Client.Buff[offset],aData.Data[0],aPacketHdr.DataSize);
+    aData.DataType:=CMD_JPG;
      //put the jpeg in the q
       LockQ.Enter;
         try
-         if fImageQue.Count<MAX_QUES then
-          fImageQue.Enqueue(aJpg);
+         if fPAcketQue.Count<MAX_QUES then
+          fPacketQue.Enqueue(aData);
         finally
          LockQ.Leave;
         end;
       //trig
-      ImRecv;
+      PacketRecv;
 
     finally
      aMemStream.SetSize(0);
      aMemStream.Free;
-     aJpg.Free;
+     SetLength(aData.Data,0);
+     aData.Free;
     end;
 end;
 
+procedure TServerCommsDm.piRecvString(Client: TPacketClient);
+var
+aPacketHdr:tPacketHdr;
+offset:integer;
+aMemStream:tMemoryStream;
+aData:tPacketData;
+begin
+  //get header..
+  Move(Client.Buff,aPacketHdr,SizeOf(aPacketHdr));
 
-procedure tServerCommsDm.ImRecv;
+    aMemStream:=tMemoryStream.Create;
+    try
+    //just want the extra data, set offset to reflect this
+    Offset:=SizeOf(tPacketHdr);
+    aData:=tPacketData.Create;
+    SetLength(aData.Data,aPacketHdr.DataSize);
+    Move(Client.Buff[offset],aData.Data[0],aPacketHdr.DataSize);
+    aData.DataType:=CMD_STR;
+     //put the jpeg in the q
+      LockQ.Enter;
+        try
+         if fPacketQue.Count<MAX_QUES then
+          fPacketQue.Enqueue(aData);
+        finally
+         LockQ.Leave;
+        end;
+      //trig
+      PacketRecv;
+
+    finally
+     aMemStream.SetSize(0);
+     aMemStream.Free;
+//     SetLength(aData.Data,0);
+  //   aData.Free;
+    end;
+end;
+
+procedure tServerCommsDm.PacketRecv;
 begin
 if assigned(fRecvEvent) then fRecvEvent(nil);
 
@@ -324,24 +368,24 @@ begin
 end;
 
 
-function tServerCommsDm.PopImage:tJpegImage;
+function tServerCommsDm.PopPacket:tPacketData;
 begin
  result:=nil;
  LockQ.Enter;
  try
-  if fImageQue.Count>0 then
-    result:=fImageQue.Dequeue;
+  if fPacketQue.Count>0 then
+    result:=fPacketQue.Dequeue;
  finally
    LockQ.Leave;
  end;
 end;
 
-function tServerCommsDm.GetImageCount:integer;
+function tServerCommsDm.GetPacketCount:integer;
 begin
 result:=-1;
  LockQ.Enter;
   try
-    result:=fImageQue.Count;
+    result:=fPacketQue.Count;
   finally
    LockQ.Leave;
   end;
@@ -351,15 +395,15 @@ end;
 procedure tServerCommsDm.EmptyQ;
 var
 i,j:integer;
-aJpg:tJpegImage;
+aData:tPacketData;
 begin
   LockQ.Enter;
   try
-     J:=fImageQue.Count-1;
+     J:=fPacketQue.Count-1;
     for I :=0 to J do
       begin
-        aJpg:=fImageQue.Dequeue;
-        aJpg.Free;
+        aData:=fPacketQue.Dequeue;
+        aData.Free;
       end;
 
   finally

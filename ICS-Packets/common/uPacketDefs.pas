@@ -21,6 +21,7 @@ MAX_QUES=101;
 
 CMD_NOP=0;
 CMD_JPG=1;
+CMD_STR=2;
 
 
 //type used in helper function
@@ -35,6 +36,8 @@ type
   Command:byte;//1 byte -255 commands
   DataSize:integer;//4 bytes -addional data size after header and not including header..
 end;
+
+
 
 function CheckPacketIdent(Const AIdent:TIdentArray):boolean;
 procedure FillPacketIdent(var aIdent:tIdentArray);

@@ -21,6 +21,7 @@ type
     btnStop: TButton;
     Button1: TButton;
     imSend: TImage;
+    Button2: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DiscoverMACIP;
@@ -28,6 +29,7 @@ type
     procedure btnStopClick(Sender: TObject);
     procedure UpdateLog(sender: tObject);
     procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -130,7 +132,7 @@ ServerCommsDm.srvSock.Port:='9000';
 ServerCommsDm.srvSock.Addr:=ServerIp;
 ServerCommsDm.srvSock.ClientClass:=tPacketClient;
 ServerCommsDm.OnDisplayLog:=UpdateLog;
-ServerCommsDm.OnRecvJpeg:=DisplayIm;
+ServerCommsDm.OnRecvPacket:=DisplayIm;
 
 
 
@@ -187,6 +189,32 @@ end;
 
 end;
 
+procedure TMainFrm.Button2Click(Sender: TObject);
+var
+aHdr:tPacketHdr;
+aStr:String;
+aBytes:TBytes;
+aBuff:TBytes;
+begin
+if ServerCommsDm.srvSock.ClientCount<1 then exit;//nope
+
+  aStr:='Hello from server!!';
+  if Length(aStr)>0 then
+   begin
+   FillPacketIdent(aHdr.Ident);
+   aHdr.Command:=CMD_STR;
+   aBytes:=TEncoding.ANSI.GetBytes(aStr);//for example using ansi
+   SetLength(aBuff,SizeOf(tPacketHdr)+Length(aBytes));//make room for hdr + string
+   aHdr.DataSize:=Length(aBytes);
+   Move(aHdr,aBuff[0],SizeOf(tPacketHdr));
+   Move(aBytes[0],aBuff[SizeOf(tPacketHdr)],Length(aBytes));
+   ServerCommsDm.srvSock.Client[0].Send(aBuff,Length(aBuff));
+   SetLength(aBytes,0);
+   SetLength(aBuff,0);
+   end;
+
+end;
+
 procedure TMainFrm.UpdateLog(sender: TObject);
 var
     I : Integer;
@@ -215,16 +243,47 @@ end;
 procedure tMainFrm.DisplayIm(sender: tObject);
 var
 ajpg:tJpegImage;
+aData:tPacketData;
+aMemStrm:tMemoryStream;
+aStr:String;
 begin
-  //update form image
-   if ServerCommsDm.ImageCount>0 then
+  //update form
+   if ServerCommsDm.PacketCount>0 then
     begin
-    aJpg:=ServerCommsDm.PopImage;
-    if Assigned(aJpg) then
-     begin
-      im.Picture.Assign(aJpg);
+    aData:=ServerCommsDm.PopPacket;
+    if aData.DataType=CMD_JPG then
+      begin
+       aJpg:=tJpegImage.Create;
+       aMemStrm:=tMemoryStream.Create;
+       aMemStrm.SetSize(Length(aData.Data));
+       aMemStrm.WriteBuffer(aData.Data[0],Length(aData.Data));
+       aMemStrm.Position:=0;
+       aJpg.LoadFromStream(aMemStrm);
+       if Assigned(aJpg) then
+        begin
+         im.Picture.Assign(aJpg);
+        end;
+       aMemStrm.SetSize(0);
+       aMemStrm.Free;
+       SetLength(aData.Data,0);
+       aData.Free;
+       aJpg.Free;
 
-     end;
+      end else
+      if aData.DataType=CMD_STR then
+        begin
+         AStr:=TEncoding.ANSI.GetString(aData.Data);
+         if Length(aStr)>0 then
+          DisplayMemo.Lines.Add(aStr);
+         SetLength(aData.Data,0);
+         aData.Free;
+
+        end else
+           begin
+           //unnkown
+           SetLength(aData.Data,0);
+           aData.Free;
+           end;
     end;
 end;
 

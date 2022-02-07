@@ -10671,7 +10671,6 @@ object MainFrm: TMainFrm
       6E11D08AD09F635DE1329CE138725EB2B1C10B9833F87E08A221FFC400171101
       0003000000000000000000000000000160A0B0FFDA0008010301093F00A10910
       732FFFD9}
-    Stretch = True
     Visible = False
   end
   object DisplayMemo: TMemo
@@ -10681,7 +10680,6 @@ object MainFrm: TMainFrm
     Height = 236
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitWidth = 457
   end
   object btnListen: TButton
     Left = 8
@@ -10692,7 +10690,6 @@ object MainFrm: TMainFrm
     Caption = 'Listen'
     TabOrder = 1
     OnClick = btnListenClick
-    ExplicitTop = 274
   end
   object btnStop: TButton
     Left = 96
@@ -10703,7 +10700,6 @@ object MainFrm: TMainFrm
     Caption = 'Stop'
     TabOrder = 2
     OnClick = btnStopClick
-    ExplicitTop = 274
   end
   object Button1: TButton
     Left = 192
@@ -10714,6 +10710,14 @@ object MainFrm: TMainFrm
     Caption = 'Send'
     TabOrder = 3
     OnClick = Button1Click
-    ExplicitTop = 274
+  end
+  object Button2: TButton
+    Left = 280
+    Top = 269
+    Width = 75
+    Height = 25
+    Caption = 'Send Str'
+    TabOrder = 4
+    OnClick = Button2Click
   end
 end

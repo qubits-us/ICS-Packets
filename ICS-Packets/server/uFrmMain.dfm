@@ -2,7 +2,7 @@ object MainFrm: TMainFrm
   Left = 0
   Top = 0
   Caption = 'ICS Packet Server'
-  ClientHeight = 302
+  ClientHeight = 443
   ClientWidth = 902
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -15,7 +15,7 @@ object MainFrm: TMainFrm
   OnCreate = FormCreate
   DesignSize = (
     902
-    302)
+    443)
   PixelsPerInch = 96
   TextHeight = 13
   object im: TImage
@@ -10673,51 +10673,115 @@ object MainFrm: TMainFrm
       732FFFD9}
     Visible = False
   end
+  object Label1: TLabel
+    Left = 504
+    Top = 296
+    Width = 51
+    Height = 13
+    Caption = 'First Name'
+  end
+  object Label2: TLabel
+    Left = 504
+    Top = 336
+    Width = 50
+    Height = 13
+    Caption = 'Last Name'
+  end
+  object Label3: TLabel
+    Left = 504
+    Top = 376
+    Width = 42
+    Height = 13
+    Caption = 'Message'
+  end
   object DisplayMemo: TMemo
     Left = 8
     Top = 8
     Width = 464
-    Height = 236
+    Height = 377
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
+    ExplicitHeight = 236
   end
   object btnListen: TButton
     Left = 8
-    Top = 269
+    Top = 410
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Listen'
     TabOrder = 1
     OnClick = btnListenClick
+    ExplicitTop = 269
   end
   object btnStop: TButton
     Left = 96
-    Top = 269
+    Top = 410
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Stop'
     TabOrder = 2
     OnClick = btnStopClick
+    ExplicitTop = 269
   end
   object Button1: TButton
     Left = 192
-    Top = 269
+    Top = 410
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Send'
     TabOrder = 3
     OnClick = Button1Click
+    ExplicitTop = 269
   end
   object Button2: TButton
     Left = 280
-    Top = 269
+    Top = 410
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'Send Str'
     TabOrder = 4
     OnClick = Button2Click
+    ExplicitTop = 269
+  end
+  object edFirstName: TEdit
+    Left = 504
+    Top = 312
+    Width = 121
+    Height = 21
+    MaxLength = 40
+    TabOrder = 5
+    Text = 'edFirstName'
+  end
+  object edLastName: TEdit
+    Left = 504
+    Top = 352
+    Width = 121
+    Height = 21
+    MaxLength = 40
+    TabOrder = 6
+    Text = 'edLastName'
+  end
+  object edMsg: TEdit
+    Left = 504
+    Top = 392
+    Width = 300
+    Height = 21
+    MaxLength = 500
+    TabOrder = 7
+    Text = 'edMsg'
+  end
+  object Button3: TButton
+    Left = 368
+    Top = 410
+    Width = 75
+    Height = 25
+    Anchors = [akLeft, akBottom]
+    Caption = 'Send Peep'
+    TabOrder = 8
+    OnClick = Button3Click
   end
 end

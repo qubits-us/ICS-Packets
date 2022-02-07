@@ -22,6 +22,13 @@ type
     Button1: TButton;
     imSend: TImage;
     Button2: TButton;
+    edFirstName: TEdit;
+    edLastName: TEdit;
+    edMsg: TEdit;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Button3: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DiscoverMACIP;
@@ -30,6 +37,7 @@ type
     procedure UpdateLog(sender: tObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
 
   private
     { Private declarations }
@@ -215,6 +223,44 @@ if ServerCommsDm.srvSock.ClientCount<1 then exit;//nope
 
 end;
 
+procedure TMainFrm.Button3Click(Sender: TObject);
+//send a peep
+var
+aPeepPck:TPeepPacket;
+aBytes:tBytes;
+begin
+
+FillPacketIdent(aPeepPck.hdr.Ident);
+aPeepPck.hdr.Command:=CMD_PEEP;
+aPeepPck.hdr.DataSize:=SizeOf(tPeep);
+//init peep string arrays.. fill with spaces.. trim off later..
+FillChar(aPeepPck.peep.FirstName,SizeOf(aPeepPck.peep.FirstName),#32);
+FillChar(aPeepPck.peep.LastName,SizeOf(aPeepPck.peep.LastName),#32);
+FillChar(aPeepPck.peep.Msg,SizeOf(aPeepPck.peep.Msg),#32);
+// i set MaxLength on the edits to ensure data is not too big
+if Length(edFirstName.Text)>0 then
+  begin
+    aBytes:=TEncoding.ANSI.GetBytes(edFirstName.Text);
+    Move(aBytes[0],aPeepPck.peep.FirstName[0],Length(aBytes));
+  end;
+SetLength(aBytes,0);
+if Length(edLastName.Text)>0 then
+  begin
+    aBytes:=TEncoding.ANSI.GetBytes(edLastName.Text);
+    Move(aBytes[0],aPeepPck.peep.LastName[0],Length(aBytes));
+  end;
+SetLength(aBytes,0);
+if Length(edMsg.Text)>0 then
+  begin
+    aBytes:=TEncoding.ANSI.GetBytes(edMsg.Text);
+    Move(aBytes[0],aPeepPck.peep.Msg[0],Length(aBytes));
+  end;
+SetLength(aBytes,0);
+
+ServerCommsDm.srvSock.Client[0].Send(@aPeepPck,SizeOf(tPeepPacket));
+
+end;
+
 procedure TMainFrm.UpdateLog(sender: TObject);
 var
     I : Integer;
@@ -245,6 +291,8 @@ var
 ajpg:tJpegImage;
 aData:tPacketData;
 aMemStrm:tMemoryStream;
+aBytes:tBytes;
+aPeep:tPeep;
 aStr:String;
 begin
   //update form
@@ -278,6 +326,21 @@ begin
          SetLength(aData.Data,0);
          aData.Free;
 
+        end else
+      if aData.DataType=CMD_PEEP then
+        begin
+         Move(aData.Data[0],aPeep,SizeOf(TPeep));
+         SetLength(aBytes,SizeOf(aPeep.FirstName));
+         Move(aPeep.FirstName[0],aBytes[0],SizeOf(aPeep.FirstName));
+         edFirstName.Text:=TEncoding.ANSI.GetString(aBytes);
+         Move(aPeep.LastName[0],aBytes[0],SizeOf(aPeep.LastName));
+         edLastName.Text:=TEncoding.ANSI.GetString(aBytes);
+         SetLength(aBytes,SizeOf(aPeep.Msg));
+         Move(aPeep.Msg[0],aBytes[0],SizeOf(aPeep.Msg));
+         edMsg.Text:=TEncoding.ANSI.GetString(aBytes);
+         SetLength(aBytes,0);
+         SetLength(aData.Data,0);
+         aData.Free;
         end else
            begin
            //unnkown
